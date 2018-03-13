@@ -1,5 +1,6 @@
 const path = require('path')
 const glob = require('glob')
+const setting = require('electron-settings')
 const {app, BrowserWindow} = require('electron')
 const autoUpdater = require('./auto-updater')
 
@@ -11,43 +12,48 @@ let mainWindow = null
 
 function initialize () {
   const shouldQuit = makeSingleInstance()
+    // 如果根据用户版本获取的结果是该退出而不是启动，则应用退出
   if (shouldQuit) return app.quit()
 
   loadDemos()
-
+    // 创建窗口
   function createWindow () {
     const windowOptions = {
       width: 1080,
       minWidth: 680,
       height: 840,
+        // 此处会设置窗口右上角显示的标题
       title: app.getName()
     }
-
+    // linux上显示大一点的图标
     if (process.platform === 'linux') {
       windowOptions.icon = path.join(__dirname, '/assets/app-icon/png/512.png')
     }
-
+    // 创建主窗口实例
     mainWindow = new BrowserWindow(windowOptions)
+      // 加载index.html
     mainWindow.loadURL(path.join('file://', __dirname, '/index.html'))
-
+      // 将开发者工具打开
+    mainWindow.webContents.openDevTools()
     // Launch fullscreen with DevTools open, usage: npm run debug
     if (debug) {
-      mainWindow.webContents.openDevTools()
       mainWindow.maximize()
       require('devtron').install()
     }
-
+    // 定义主窗口关闭事件
     mainWindow.on('closed', () => {
+      setting.delete('activeDemoButtonId')
       mainWindow = null
     })
   }
-
+  // 应用准备事件
   app.on('ready', () => {
     createWindow()
     autoUpdater.initialize()
   })
 
   app.on('window-all-closed', () => {
+    setting.delete('activeDemoButtonId')
     if (process.platform !== 'darwin') {
       app.quit()
     }
@@ -60,13 +66,10 @@ function initialize () {
   })
 }
 
-// Make this app a single instance app.
+// 使这个应用变成单例应用.
 //
-// The main window will be restored and focused instead of a second window
-// opened when a person attempts to launch a second instance.
-//
-// Returns true if the current version of the app should quit instead of
-// launching.
+// 当用户试图开启第二个实例的时候，主窗口将会恢复并聚焦，而不是打开第二个窗口实例
+// 如果当前应用的版本应该退出而不是启动的话，就会返回true
 function makeSingleInstance () {
   if (process.mas) return false
 
@@ -78,14 +81,14 @@ function makeSingleInstance () {
   })
 }
 
-// Require each JS file in the main-process dir
+// 加载main-process目录下的所有JS文件
 function loadDemos () {
   const files = glob.sync(path.join(__dirname, 'main-process/**/*.js'))
   files.forEach((file) => { require(file) })
   autoUpdater.updateMenu()
 }
 
-// Handle Squirrel on Windows startup events
+// 处理应用启动时的各种参数
 switch (process.argv[1]) {
   case '--squirrel-install':
     autoUpdater.createShortcut(() => { app.quit() })

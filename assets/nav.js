@@ -30,7 +30,10 @@ function activateDefaultSection () {
 }
 
 function showMainContent () {
+    // 查找出所有具有js-nav样式的元素，罗列出它们的样式表，然后给加上is-shown样式
+    // 导航栏
   document.querySelector('.js-nav').classList.add('is-shown')
+    // 内容栏
   document.querySelector('.js-content').classList.add('is-shown')
 }
 
@@ -64,7 +67,7 @@ function displayAbout () {
   document.querySelector('#about-modal').classList.add('is-shown')
 }
 
-// Default to the view that was active the last time the app was open
+// 默认打开最近一次打开的窗口，如果没有，则直接显示about.html
 const sectionId = settings.get('activeSectionButtonId')
 if (sectionId) {
   showMainContent()

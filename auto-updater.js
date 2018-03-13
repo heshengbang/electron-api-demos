@@ -41,10 +41,11 @@ exports.updateMenu = () => {
 
   const menu = Menu.getApplicationMenu()
   if (!menu) return
-
+ // 如果有三级菜单会不会直接崩掉？
   menu.items.forEach(item => {
     if (item.submenu) {
       item.submenu.items.forEach(item => {
+        // 根据菜单的state来显示内容，默认是检查更新
         switch (item.key) {
           case 'checkForUpdate':
             item.visible = state === 'no-update'
